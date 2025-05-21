@@ -1,22 +1,26 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../db/supabaseClient";
 import useAuthStore from "../store/authStore";
 
 export default function AddProduct() {
+  const navigate = useNavigate();
+  const role = useAuthStore((state) => state.role);
+  const user = useAuthStore((state) => state.user);
+  const [loading, setLoading] = useState(true); 
+
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
     imageFile: null,
   });
-  const navigate = useNavigate();
-  const profile = useAuthStore((state) => state.profile);
 
-  if (profile?.role !== "SELLER") {
-    return <div className="text-center p-6 text-red-500">Access denied. Only sellers can add products.</div>;
-  }
+  useEffect(() => {
+    if (role || role === null) {
+      setLoading(false);
+    }
+  }, [role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,6 +66,15 @@ export default function AddProduct() {
     alert("Product added successfully!");
     navigate("/");
   };
+
+  if (loading) return <div className="text-center p-6">Checking access...</div>;
+  if (role !== "SELLER") {
+    return (
+      <div className="text-red-600 text-center p-6">
+        Access denied. Only sellers can add products.
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto p-6">

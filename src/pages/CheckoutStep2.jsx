@@ -1,108 +1,137 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { supabase } from "../db/supabaseClient";
+import useAuthStore from "../store/authStore";
+import emailjs from "@emailjs/browser";
 
 export default function CheckoutStep2() {
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [billingAddressType, setBillingAddressType] = useState("private");
-  const [sameAsShipping, setSameAsShipping] = useState(true);
+  const profile = useAuthStore((state) => state.profile);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate("/confirmation"); 
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [billingType, setBillingType] = useState("Private");
+  const [invoiceToShipping, setInvoiceToShipping] = useState(true);
+  const [checkoutInfo, setCheckoutInfo] = useState(null);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("checkoutInfo"));
+    if (stored) {
+      setCheckoutInfo(stored);
+      console.log("Checkout Info Loaded:", stored);
+    } else {
+      console.error("Checkout info not found. Please go back and fill it.");
+    }
+  }, []);
+
+  const handleFinish = async () => {
+    if (!checkoutInfo) {
+      alert("Missing checkout info!");
+      return;
+    }
+
+    const { firstName, lastName, country, city, phone, address, email } = checkoutInfo;
+
+    const { error } = await supabase.from("checkout_info").insert([
+      {
+        user_id: profile?.id,
+        first_name: firstName,
+        last_name: lastName,
+        country,
+        city,
+        phone,
+        address,
+        payment_method: paymentMethod,
+        billing_type: billingType,
+        invoice_to_shipping: invoiceToShipping,
+      },
+    ]);
+
+    if (error) {
+      console.error("Insert failed:", error.message);
+      return;
+    }
+
+    try {
+      const result = await emailjs.send(
+        "service_wkxgmku",
+        "template_g64teim",
+        {
+          name: `${firstName} ${lastName}`,
+          email,
+          address,
+          phone,
+          city,
+          country,
+        },
+        "GEOWAuCtH9-XtkI3N"
+      );
+      console.log(" Email sent:", result.text);
+    } catch (err) {
+      console.error(" Email sending failed:", err);
+    }
+
+    alert("Order placed successfully!");
+    navigate("/confirmation");
   };
+
+  if (!checkoutInfo) {
+    return <p className="text-red-600 p-4">Checkout info not found. Please go back and fill it.</p>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">2. Payment Details</h2>
+      <h2 className="text-xl font-bold mb-4">2. Payment Details</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block font-medium mb-2">Choose a payment method</label>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
+      <div className="mb-4">
+        <p className="font-semibold mb-1">Choose a payment method</p>
+        {["Cash on Delivery", "Pay with POS", "Online Payment", "Bank Transfer"].map(
+          (method) => (
+            <label key={method} className="block">
               <input
                 type="radio"
-                name="paymentMethod"
-                value="cash"
-                checked={paymentMethod === "cash"}
-                onChange={() => setPaymentMethod("cash")}
+                value={method}
+                checked={paymentMethod === method}
+                onChange={() => setPaymentMethod(method)}
+                className="mr-2"
               />
-              <span>Cash on Delivery</span>
+              {method}
             </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="pos"
-                checked={paymentMethod === "pos"}
-                onChange={() => setPaymentMethod("pos")}
-              />
-              <span>Pay with POS</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="online"
-                checked={paymentMethod === "online"}
-                onChange={() => setPaymentMethod("online")}
-              />
-              <span>Online Payment</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="bank"
-                checked={paymentMethod === "bank"}
-                onChange={() => setPaymentMethod("bank")}
-              />
-              <span>Bank Transfer</span>
-            </label>
-          </div>
-        </div>
+          )
+        )}
+      </div>
 
-        <div>
-          <label className="block font-medium mb-2">Billing address type</label>
-          <div className="flex gap-4">
-            <button
-              type="button"
-              className={`px-4 py-2 border rounded ${billingAddressType === "private" ? "bg-red-100 border-red-500" : ""}`}
-              onClick={() => setBillingAddressType("private")}
-            >
-              Private
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 border rounded ${billingAddressType === "company" ? "bg-red-100 border-red-500" : ""}`}
-              onClick={() => setBillingAddressType("company")}
-            >
-              Company
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={sameAsShipping}
-            onChange={() => setSameAsShipping(!sameAsShipping)}
-          />
-          <label>Invoice to shipping address</label>
-        </div>
-
-        <p className="text-sm text-gray-600">
-          By clicking the "Finish" button, you confirm that you have read, understood, and agree to our <a href="#" className="text-blue-600 underline">Terms of Use</a> and <a href="#" className="text-blue-600 underline">Privacy Policy</a>.
-        </p>
-
+      <div className="mb-4">
+        <p className="font-semibold mb-1">Billing address type</p>
         <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-600 text-white px-6 py-2 rounded"
+          className={`px-4 py-2 rounded-l ${billingType === "Private" ? "bg-red-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setBillingType("Private")}
         >
-          Finish
+          Private
         </button>
-      </form>
+        <button
+          className={`px-4 py-2 rounded-r ${billingType === "Company" ? "bg-red-500 text-white" : "bg-gray-200"}`}
+          onClick={() => setBillingType("Company")}
+        >
+          Company
+        </button>
+      </div>
+
+      <label className="block mb-4">
+        <input
+          type="checkbox"
+          checked={invoiceToShipping}
+          onChange={(e) => setInvoiceToShipping(e.target.checked)}
+          className="mr-2"
+        />
+        Invoice to shipping address
+      </label>
+
+      <button
+        onClick={handleFinish}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Finish
+      </button>
     </div>
   );
 }

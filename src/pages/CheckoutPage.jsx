@@ -10,6 +10,7 @@ export default function CheckoutPage() {
     country: "",
     city: "",
     phone: "",
+    email: "",
     address: "",
   });
 
@@ -19,7 +20,8 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate("/checkout-step2"); 
+    localStorage.setItem("checkoutInfo", JSON.stringify(form));
+    navigate("/checkout-step2");
   };
 
   return (
@@ -38,7 +40,6 @@ export default function CheckoutPage() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium">Last Name:</label>
             <input
@@ -50,7 +51,6 @@ export default function CheckoutPage() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium">Country:</label>
             <select
@@ -66,7 +66,6 @@ export default function CheckoutPage() {
               <option value="Germany">Germany</option>
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium">City:</label>
             <select
@@ -82,7 +81,6 @@ export default function CheckoutPage() {
               <option value="Peja">Peja</option>
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium">Phone Number:</label>
             <input
@@ -94,8 +92,18 @@ export default function CheckoutPage() {
               required
             />
           </div>
-
           <div>
+            <label className="block text-sm font-medium">Email:</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+              required
+            />
+          </div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium">Address:</label>
             <input
               type="text"
@@ -120,7 +128,7 @@ export default function CheckoutPage() {
         <div className="flex justify-end mt-6">
           <button
             type="submit"
-            className="bg-purple-600 hover:bg-purple-600 text-white px-6 py-2 rounded"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded"
           >
             Continue
           </button>
