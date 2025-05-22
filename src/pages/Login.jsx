@@ -9,29 +9,44 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
   const setUser = useAuthStore((state) => state.setUser);
-  const fetchProfile = useAuthStore((state) => state.fetchProfile);
+  const getProfile = useAuthStore((state) => state.getProfile);  
 
   const handleLogin = async () => {
     setErrorMsg("");
     setLoading(true);
-
+  
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
+  
     if (error) {
+      console.error("Login error:", error.message);
       setErrorMsg(error.message);
       setLoading(false);
       return;
     }
-
-    setUser(data.user);
-    await fetchProfile(data.user.id);
-    console.log("Login successful, user:", data.user);
-    navigate("/");
+  
+    console.log("✅ User logged in:", data.user);
+  
+    try {
+      setUser(data.user); // Set user
+      console.log("✅ setUser finished");
+  
+      await getProfile(data.user); // Load profile
+      console.log("✅ getProfile finished");
+  
+      navigate("/");
+    } catch (err) {
+      console.error("Login flow failed:", err.message);
+      setErrorMsg("Something went wrong during login.");
+    } finally {
+      setLoading(false);
+    }
   };
+  
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({

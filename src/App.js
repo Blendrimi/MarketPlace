@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "./store/authStore";
 
+// imports...
 import Navbar from "./components/Navbar";
-import SubNavbar from "./components/SubNavbar";
 import CategoryScroller from "./components/CategoryScroller";
 import ProductGrid from "./components/ProductGrid";
 import Register from "./pages/Register";
@@ -20,43 +20,57 @@ import CheckoutStep2 from "./pages/CheckoutStep2";
 import CheckoutConfirmation from "./components/CheckoutConfirmation";
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const fetchSessionAndProfile = useAuthStore((state) => state.fetchSessionAndProfile);
   const initAuthListener = useAuthStore((state) => state.initAuthListener);
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
 
+  // ✅ Fetch session on first load
   useEffect(() => {
     fetchSessionAndProfile();
-    const subscription = initAuthListener();
-    return () => subscription?.unsubscribe();
+    const sub = initAuthListener();
+    return () => sub?.unsubscribe();
   }, []);
 
+  // ✅ Redirect to /profile only AFTER session is fetched and we're on root
+  useEffect(() => {
+    const hash = window.location.hash;
+    const urlHasToken = hash.includes("access_token") || hash.includes("type=signup");
+
+    if (!loading && user && location.pathname === "/" && urlHasToken) {
+      console.log("✅ Redirecting after email confirmation...");
+      navigate("/profile");
+    }
+  }, [user, loading, location.pathname, navigate]);
+
   return (
-    <>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <Navbar />
-              <CategoryScroller />
-              <ProductGrid />
-              <Footer />
-            </>
-          }
-        />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/add-product" element={<AddProduct />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/wishlist" element={<WishlistPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/checkout-step2" element={<CheckoutStep2 />} />
-        <Route path="/confirmation" element={<CheckoutConfirmation />} />
-
-
-      </Routes>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <>
+            <Navbar />
+            <CategoryScroller />
+            <ProductGrid />
+            <Footer />
+          </>
+        }
+      />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/cart" element={<CartPage />} />
+      <Route path="/add-product" element={<AddProduct />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/wishlist" element={<WishlistPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/checkout-step2" element={<CheckoutStep2 />} />
+      <Route path="/confirmation" element={<CheckoutConfirmation />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 

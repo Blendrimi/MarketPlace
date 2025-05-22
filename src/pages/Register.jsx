@@ -9,8 +9,9 @@ export default function Register() {
   const [role, setRole] = useState('BUYER');
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+
   const setUser = useAuthStore((state) => state.setUser);
-  const fetchProfile = useAuthStore((state) => state.fetchProfile);
+  const getProfile = useAuthStore((state) => state.getProfile);
 
   const handleRegister = async () => {
     setErrorMsg('');
@@ -18,6 +19,9 @@ export default function Register() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { role }, // ✅ Save role to metadata
+      },
     });
 
     if (error) {
@@ -25,21 +29,10 @@ export default function Register() {
       return;
     }
 
-    if (data?.user) {
-      const { error: insertError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        role,
-      });
-
-      if (insertError) {
-        console.error('Failed to insert profile:', insertError.message);
-      } else {
-        setUser(data.user);
-        await fetchProfile(data.user.id);
-      }
-
-      alert('Registration successful! Please confirm your email.');
+    if (data?.user?.id) {
+      alert('✅ Registration successful! Please confirm your email, then log in.');
+      setUser(data.user);
+      await getProfile(data.user);
       navigate('/login');
     }
   };
@@ -50,7 +43,6 @@ export default function Register() {
     });
 
     if (error) {
-      console.error('Google Auth error:', error.message);
       setErrorMsg(error.message);
     }
   };
@@ -66,12 +58,14 @@ export default function Register() {
         placeholder="Email"
         className="w-full p-2 border mb-3"
         onChange={(e) => setEmail(e.target.value)}
+        required
       />
       <input
         type="password"
         placeholder="Password"
         className="w-full p-2 border mb-3"
         onChange={(e) => setPassword(e.target.value)}
+        required
       />
       <select
         className="w-full p-2 border mb-3"

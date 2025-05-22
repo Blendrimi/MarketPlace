@@ -7,23 +7,31 @@ const useAuthStore = create((set) => ({
   role: null,
   loading: true,
 
+  // Needed for login to work
+  setUser: (user) => set({ user }),
+  setProfile: (profile) => set({ profile }),
+
   fetchSessionAndProfile: async () => {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error) {
-      console.error(' Error fetching session:', error.message);
+      if (error || !session?.user) {
+        set({ user: null, profile: null, role: null, loading: false });
+        return;
+      }
+
+      const user = session.user;
+      set({ user });
+
+      if (user) {
+        await useAuthStore.getState().getProfile(user);
+      }
+
+      set({ loading: false });
+    } catch (err) {
+      console.error("fetchSessionAndProfile error:", err.message);
       set({ user: null, profile: null, role: null, loading: false });
-      return;
     }
-
-    const currentUser = session?.user ?? null;
-    set({ user: currentUser });
-
-    if (currentUser) {
-      await useAuthStore.getState().getProfile(currentUser);
-    }
-
-    set({ loading: false });
   },
 
   getProfile: async (currentUser) => {
@@ -35,43 +43,34 @@ const useAuthStore = create((set) => ({
         .single();
 
       if (error) {
-        console.error(' Error fetching profile:', error.message);
-        set({ profile: null });
-      } else {
-        set({ profile: data });
-        await useAuthStore.getState().getUserRole(data.email);
+        console.error("getProfile error:", error.message);
+        return;
       }
+
+      set({ profile: data });
+
+      await useAuthStore.getState().getUserRole(data.email);
     } catch (err) {
-      console.error(' Unexpected error loading profile:', err.message);
-      set({ profile: null });
+      console.error("Unexpected getProfile error:", err.message);
     }
   },
 
   getUserRole: async (email) => {
     try {
-      const decodedEmail = decodeURIComponent(email);
-
       const { data, error } = await supabase
         .from('users')
         .select('role')
-        .eq('email', decodedEmail)
+        .eq('email', decodeURIComponent(email))
         .single();
 
       if (error) {
-        console.warn(' Role fetch error:', error.message);
         set({ role: null });
         return;
       }
 
-      if (data?.role) {
-        console.log(' Role found:', data.role);
-        set({ role: data.role });
-      } else {
-        console.warn(' No role returned for this email.');
-        set({ role: null });
-      }
+      set({ role: data?.role || null });
     } catch (err) {
-      console.error(' Unexpected error fetching role:', err.message);
+      console.error("getUserRole error:", err.message);
       set({ role: null });
     }
   },
@@ -90,7 +89,7 @@ const useAuthStore = create((set) => ({
       }
     );
     return subscription;
-  },
+  }
 }));
 
 export default useAuthStore;
