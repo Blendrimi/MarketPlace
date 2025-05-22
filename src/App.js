@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "./store/authStore";
 
-// imports...
 import Navbar from "./components/Navbar";
 import CategoryScroller from "./components/CategoryScroller";
 import ProductGrid from "./components/ProductGrid";
@@ -10,7 +9,6 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Footer from "./components/Footer";
 import AddProduct from "./pages/AddProduct";
-import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import Profile from "./pages/Profile";
 import CartPage from "./pages/CartPage";
@@ -18,6 +16,7 @@ import WishlistPage from "./pages/WishlistPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import CheckoutStep2 from "./pages/CheckoutStep2";
 import CheckoutConfirmation from "./components/CheckoutConfirmation";
+import CategoryPage from "./pages/CategoryPage";
 
 function App() {
   const navigate = useNavigate();
@@ -28,20 +27,18 @@ function App() {
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
 
-  // ✅ Fetch session on first load
   useEffect(() => {
     fetchSessionAndProfile();
     const sub = initAuthListener();
     return () => sub?.unsubscribe();
   }, []);
 
-  // ✅ Redirect to /profile only AFTER session is fetched and we're on root
   useEffect(() => {
     const hash = window.location.hash;
     const urlHasToken = hash.includes("access_token") || hash.includes("type=signup");
 
     if (!loading && user && location.pathname === "/" && urlHasToken) {
-      console.log("✅ Redirecting after email confirmation...");
+      console.log(" Redirecting after email confirmation...");
       navigate("/profile");
     }
   }, [user, loading, location.pathname, navigate]);
@@ -69,6 +66,7 @@ function App() {
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/checkout-step2" element={<CheckoutStep2 />} />
       <Route path="/confirmation" element={<CheckoutConfirmation />} />
+      <Route path="/category/:name" element={<CategoryPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

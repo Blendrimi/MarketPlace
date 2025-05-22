@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const categories = [
   { name: "Gaming", icon: "🎮" },
   { name: "Sport Equip", icon: "🏀" },
@@ -12,6 +14,12 @@ const categories = [
 ];
 
 function CategoryScroller() {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (category) => {
+    navigate(`/category/${encodeURIComponent(category)}`);
+  };
+
   return (
     <div className="w-full px-6 py-6 bg-white">
       <h2 className="text-xl font-semibold mb-4">Popular Categories</h2>
@@ -19,7 +27,8 @@ function CategoryScroller() {
         {categories.map((cat, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center min-w-[80px] text-center"
+            onClick={() => handleCategoryClick(cat.name)}
+            className="flex flex-col items-center min-w-[80px] text-center cursor-pointer"
           >
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl shadow">
               {cat.icon}

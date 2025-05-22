@@ -5,14 +5,14 @@ import { Link } from "react-router-dom";
 export default function BestSellerSection() {
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
-  const [activeTab, setActiveTab] = useState("Top 5");
+  const [activeTab, setActiveTab] = useState("top5");
 
+  // 🔁 Match actual DB values like "Television", "PC Gaming", etc.
   const tabs = [
-    "Top 5",
-    "Televisions",
-    "PC Gaming",
-    "Computers",
-  
+    { label: "Top 5", value: "top5" },
+    { label: "Televisions", value: "television" },
+    { label: "PC Gaming", value: "pc gaming" },
+    { label: "Computers", value: "computers" },
   ];
 
   useEffect(() => {
@@ -20,19 +20,20 @@ export default function BestSellerSection() {
       const { data, error } = await supabase.from("products").select("*");
       if (!error && data) {
         setProducts(data);
-        setFiltered(data.slice(0, 5));
+        setFiltered(data.slice(0, 5)); // Default to top 5
       }
     };
     fetchProducts();
   }, []);
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    if (tab === "Top 5") {
+  const handleTabClick = (tabValue) => {
+    setActiveTab(tabValue);
+
+    if (tabValue === "top5") {
       setFiltered(products.slice(0, 5));
     } else {
-      const filteredProducts = products.filter((p) =>
-        p.category?.toLowerCase() === tab.toLowerCase()
+      const filteredProducts = products.filter(
+        (p) => p.category?.toLowerCase() === tabValue
       );
       setFiltered(filteredProducts);
     }
@@ -45,17 +46,17 @@ export default function BestSellerSection() {
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6">
-        {tabs.map((tab, i) => (
+        {tabs.map((tab) => (
           <button
-            key={i}
-            onClick={() => handleTabClick(tab)}
+            key={tab.value}
+            onClick={() => handleTabClick(tab.value)}
             className={`px-4 py-1 rounded-full border text-sm font-medium ${
-              activeTab === tab
+              activeTab === tab.value
                 ? "bg-purple-600 text-white"
                 : "bg-white text-gray-800"
             }`}
           >
-            {tab}
+            {tab.label}
           </button>
         ))}
       </div>

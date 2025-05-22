@@ -57,11 +57,7 @@ export default function Navbar() {
         <div className="text-2xl font-bold text-purple-700">MarketPlace</div>
 
         <div className="flex items-center gap-4 w-1/2">
-          <select className="border px-3 py-2 rounded-md text-sm">
-            <option>All Categories</option>
-            <option>Gaming</option>
-            <option>Mobiles</option>
-          </select>
+         
           <SearchBar />
         </div>
 

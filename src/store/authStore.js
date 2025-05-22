@@ -7,7 +7,6 @@ const useAuthStore = create((set) => ({
   role: null,
   loading: true,
 
-  // Needed for login to work
   setUser: (user) => set({ user }),
   setProfile: (profile) => set({ profile }),
 

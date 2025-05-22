@@ -1,11 +1,13 @@
-// src/Pages/ProductDetails.jsx
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../db/supabaseClient";
+import { useCartStore } from "../store/cartStore"; // ← Import the correct store
 
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const addToCart = useCartStore((state) => state.addToCart); // ← Correct method name
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -22,6 +24,11 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
+  const handleAddToCart = () => {
+    addToCart(product);    // ✅ use addToCart from the store
+    navigate("/cart");     // 🚀 redirect after adding
+  };
+
   if (!product) return <div className="text-center mt-8">Loading...</div>;
 
   return (
@@ -36,8 +43,11 @@ export default function ProductDetails() {
       <p className="text-purple-700 text-xl font-semibold mb-6">
         ${product.price}
       </p>
-      <button className="bg-purple-700 text-white px-6 py-2 rounded hover:bg-purple-800">
-        Buy Now
+      <button
+        className="bg-purple-700 text-white px-6 py-2 rounded hover:bg-purple-800"
+        onClick={handleAddToCart}
+      >
+        Add To Cart
       </button>
     </div>
   );

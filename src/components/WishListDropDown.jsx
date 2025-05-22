@@ -4,6 +4,16 @@ import { useNavigate } from "react-router-dom";
 export default function WishlistDropdown() {
   const items = useWishlistStore((state) => state.items);
   const navigate = useNavigate();
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="absolute right-0 mt-2 w-80 bg-white border shadow-md rounded-md z-50">

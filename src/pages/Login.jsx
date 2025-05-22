@@ -29,14 +29,14 @@ export default function Login() {
       return;
     }
   
-    console.log("✅ User logged in:", data.user);
+    console.log(" User logged in:", data.user);
   
     try {
-      setUser(data.user); // Set user
-      console.log("✅ setUser finished");
+      setUser(data.user);  
+      console.log(" setUser finished");
   
-      await getProfile(data.user); // Load profile
-      console.log("✅ getProfile finished");
+      await getProfile(data.user);  
+      console.log("getProfile finished");
   
       navigate("/");
     } catch (err) {
