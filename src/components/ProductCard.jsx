@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCartStore } from "../store/cartStore";
 import { useWishlistStore } from "../store/wishListStore";
 import { FaHeart } from "react-icons/fa";
@@ -8,6 +8,15 @@ export default function ProductCard({ product, onEdit, onDelete }) {
   const addToCart = useCartStore((state) => state.addToCart);
   const addToWishlist = useWishlistStore((state) => state.addToWishlist);
   const role = useAuthStore((state) => state.role);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleAddToCart = () => {
+    addToCart(product);
+    if (location.pathname.startsWith("/category")) {
+      navigate("/cart");
+    }
+  };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition duration-300 relative">
@@ -31,7 +40,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
 
       <button
         className="w-full bg-purple-700 text-white py-2 rounded hover:bg-purple-600 text-sm mb-2"
-        onClick={() => addToCart(product)}
+        onClick={handleAddToCart}
       >
         Add To Cart
       </button>
@@ -39,13 +48,13 @@ export default function ProductCard({ product, onEdit, onDelete }) {
       {role === "SELLER" && (
         <div className="flex justify-end gap-2">
           <button
-            onClick={() => onEdit(product)}
+            onClick={() => onEdit && onEdit(product)}
             className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
           >
             Edit
           </button>
           <button
-            onClick={() => onDelete(product.id)}
+            onClick={() => onDelete  && onDelete(product.id)}
             className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
           >
             Delete

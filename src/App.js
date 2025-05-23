@@ -45,17 +45,17 @@ function App() {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <>
-            <Navbar />
-            <CategoryScroller />
-            <ProductGrid />
-            <Footer />
-          </>
-        }
-      />
+     <Route
+  path="/"
+  element={
+    <div key={location.pathname}>
+      <Navbar />
+      <CategoryScroller />
+      <ProductGrid />
+      <Footer />
+    </div>
+  }
+/>
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/profile" element={<Profile />} />

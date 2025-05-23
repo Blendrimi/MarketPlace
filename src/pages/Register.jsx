@@ -11,7 +11,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   const setUser = useAuthStore((state) => state.setUser);
-  const getProfile = useAuthStore((state) => state.getProfile);
+  const getOrCreateProfile = useAuthStore((state) => state.getOrCreateProfile);
 
   const handleRegister = async () => {
     setErrorMsg('');
@@ -20,7 +20,7 @@ export default function Register() {
       email,
       password,
       options: {
-        data: { role }, // ✅ Save role to metadata
+        data: { role },
       },
     });
 
@@ -30,9 +30,21 @@ export default function Register() {
     }
 
     if (data?.user?.id) {
+      try {
+        await supabase.from('profiles').insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            role,
+          },
+        ]);
+      } catch (insertError) {
+        console.error("Insert profile error:", insertError.message);
+      }
+
       alert('✅ Registration successful! Please confirm your email, then log in.');
       setUser(data.user);
-      await getProfile(data.user);
+      await getOrCreateProfile(data.user);
       navigate('/login');
     }
   };

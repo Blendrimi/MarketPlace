@@ -23,7 +23,7 @@ const useAuthStore = create((set) => ({
       set({ user });
 
       if (user) {
-        await useAuthStore.getState().getProfile(user);
+        await useAuthStore.getState().getOrCreateProfile(user);
       }
 
       set({ loading: false });
@@ -33,46 +33,56 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  getProfile: async (currentUser) => {
+  getOrCreateProfile: async (currentUser) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
-
-      if (error) {
-        console.error("getProfile error:", error.message);
-        return;
+  
+      if (error && error.code === 'PGRST116') {
+        // Role from metadata or fallback to BUYER
+        const roleFromMetadata = currentUser.user_metadata?.role || 'BUYER';
+  
+        const { error: insertError } = await supabase.from('profiles').insert([
+          {
+            id: currentUser.id,
+            email: currentUser.email,
+            role: roleFromMetadata,
+          },
+        ]);
+  
+        if (insertError) {
+          console.error("Insert profile error:", insertError.message);
+        }
       }
-
-      set({ profile: data });
-
-      await useAuthStore.getState().getUserRole(data.email);
-    } catch (err) {
-      console.error("Unexpected getProfile error:", err.message);
-    }
-  },
-
-  getUserRole: async (email) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('email', decodeURIComponent(email))
+  
+      // Re-fetch to ensure role is read
+      const { data: profileData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
         .single();
-
-      if (error) {
-        set({ role: null });
+  
+      if (fetchError) {
+        console.error("Fetch profile error:", fetchError.message);
         return;
       }
-
-      set({ role: data?.role || null });
+  
+      set({ profile: profileData });
+  
+      if (profileData?.role) {
+        set({ role: profileData.role });
+      } else {
+        console.warn("No role found in profile.");
+        set({ role: null });
+      }
     } catch (err) {
-      console.error("getUserRole error:", err.message);
-      set({ role: null });
+      console.error("Unexpected getOrCreateProfile error:", err.message);
     }
   },
+   
 
   initAuthListener: () => {
     const { subscription } = supabase.auth.onAuthStateChange(
@@ -81,14 +91,14 @@ const useAuthStore = create((set) => ({
         set({ user: currentUser });
 
         if (currentUser) {
-          await useAuthStore.getState().getProfile(currentUser);
+          await useAuthStore.getState().getOrCreateProfile(currentUser);
         } else {
           set({ profile: null, role: null });
         }
       }
     );
     return subscription;
-  }
+  },
 }));
 
 export default useAuthStore;

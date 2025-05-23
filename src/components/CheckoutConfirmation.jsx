@@ -1,13 +1,19 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCartStore } from "../store/cartStore";
 
 export default function CheckoutConfirmation() {
   const navigate = useNavigate();
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate("/");
-    }, 5000); 
+    }, 6000); 
     return () => clearTimeout(timer);
   }, [navigate]);
 

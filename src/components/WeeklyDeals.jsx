@@ -26,7 +26,7 @@ export default function WeeklyDeals() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Best Weekly Deals</h2>
         <span className="bg-red-500 text-white text-xs px-4 py-1 rounded-full">
-          Expires in: -132 d -9 h -35 m -45 s
+          Expires in: -15 d -9 h -35 m -45 s
         </span>
       </div>
 

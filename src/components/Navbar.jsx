@@ -25,6 +25,8 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState(false);
 
   const dropdownRef = useRef(null);
+  const wishlistRef = useRef(null);
+  const cartRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -39,7 +41,11 @@ export default function Navbar() {
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
+        !dropdownRef.current.contains(event.target) &&
+        cartRef.current &&
+        !cartRef.current.contains(event.target) &&
+        wishlistRef.current &&
+        !wishlistRef.current.contains(event.target)
       ) {
         setOpenDropdown(false);
         setShowCartDropdown(false);
@@ -52,22 +58,21 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="w-full bg-white shadow-sm z-50 relative">
+    <header className="w-full bg-white shadow-sm relative">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="text-2xl font-bold text-purple-700">MarketPlace</div>
 
         <div className="flex items-center gap-4 w-1/2">
-         
           <SearchBar />
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-gray-700 relative z-50">
+        <div className="flex items-center gap-4 text-sm text-gray-700 relative ">
           <div className="text-right hidden md:block">
             <div className="font-semibold">Hotline 24/7</div>
             <div className="text-purple-600">(025) 3686 25 16</div>
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={wishlistRef}>
             <FaHeart
               className="text-gray-600 cursor-pointer"
               onClick={() => setShowWishlistDropdown((prev) => !prev)}
@@ -78,7 +83,7 @@ export default function Navbar() {
               </span>
             )}
             {showWishlistDropdown && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg">
                 <div className="p-4 border-b font-semibold text-sm">
                   WishList ({wishlistItems.length})
                 </div>
@@ -99,7 +104,10 @@ export default function Navbar() {
                 </div>
                 <div className="p-4 border-t">
                   <button
-                    onClick={() => navigate("/wishlist")}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate("/wishlist");
+                    }}
                     className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
                   >
                     Go To WishList
@@ -109,7 +117,7 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative" ref={cartRef}>
             <FaShoppingCart
               className="text-gray-600 cursor-pointer"
               onClick={() => setShowCartDropdown((prev) => !prev)}
@@ -121,7 +129,7 @@ export default function Navbar() {
             )}
 
             {showCartDropdown && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg">
                 <div className="p-4 border-b font-semibold text-sm">
                   Products To Cart ({cartItems.length})
                 </div>
@@ -145,7 +153,10 @@ export default function Navbar() {
                 </div>
                 <div className="p-4 border-t">
                   <button
-                    onClick={() => navigate("/cart")}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate("/cart");
+                    }}
                     className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
                   >
                     Go To Cart (€{cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)})
@@ -165,7 +176,7 @@ export default function Navbar() {
             </button>
 
             {openDropdown && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border shadow-lg rounded z-50">
+              <div className="absolute right-0 mt-2 w-40 bg-white border shadow-lg rounded">
                 {user && profile ? (
                   <>
                     <div className="px-4 py-2 text-xs text-gray-500 border-b truncate">

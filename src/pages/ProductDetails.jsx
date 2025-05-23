@@ -25,8 +25,8 @@ export default function ProductDetails() {
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);    // ✅ use addToCart from the store
-    navigate("/cart");     // 🚀 redirect after adding
+    addToCart(product);     
+    navigate("/cart");     
   };
 
   if (!product) return <div className="text-center mt-8">Loading...</div>;
